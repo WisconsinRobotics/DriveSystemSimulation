@@ -102,6 +102,7 @@ add_executable(rover rover_simulation.cpp)
 add_executable(roverA rover_simulationA.cpp)
 add_executable(roverB rover_simulationB.cpp)
 add_executable(roverC rover_simulationC.cpp)
+add_executable(roverD rover_simulationD.cpp)
 
 
 #--------------------------------------------------------------
@@ -131,6 +132,11 @@ set_target_properties(roverC PROPERTIES
 	    COMPILE_DEFINITIONS "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\""
 	    LINK_FLAGS "${CHRONO_LINKER_FLAGS}")
 
+set_target_properties(roverD PROPERTIES 
+	    COMPILE_FLAGS "${CHRONO_CXX_FLAGS} ${EXTRA_COMPILE_FLAGS}"
+	    COMPILE_DEFINITIONS "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\""
+	    LINK_FLAGS "${CHRONO_LINKER_FLAGS}")
+
 #--------------------------------------------------------------
 # Link to Chrono libraries and dependency libraries
 #--------------------------------------------------------------
@@ -139,6 +145,7 @@ target_link_libraries(rover ${CHRONO_LIBRARIES})
 target_link_libraries(roverA ${CHRONO_LIBRARIES})
 target_link_libraries(roverB ${CHRONO_LIBRARIES})
 target_link_libraries(roverC ${CHRONO_LIBRARIES})
+target_link_libraries(roverD ${CHRONO_LIBRARIES})
 
 #--------------------------------------------------------------
 # === 4 (OPTIONAL) ===
