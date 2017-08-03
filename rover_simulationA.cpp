@@ -20,6 +20,9 @@
 #include "chrono/assets/ChColorAsset.h"
 #include "chrono_irrlicht/ChIrrApp.h"
 
+
+double ftTom = 1 / 3.3;
+
 // Use the namespace of Chrono
 
 using namespace chrono;
@@ -34,6 +37,8 @@ using namespace irr::video;
 using namespace irr::io;
 using namespace irr::gui;
 
+
+
 int main(int argc, char* argv[]) {
     // Set path to Chrono data directory
     SetChronoDataPath(CHRONO_DATA_DIR);
@@ -43,13 +48,13 @@ int main(int argc, char* argv[]) {
 
     // Create the Irrlicht visualization (open the Irrlicht device,
     // bind a simple user interface, etc. etc.)
-    ChIrrApp application(&mphysicalSystem, L"A simple project template", core::dimension2d<u32>(1920, 1080),
+    ChIrrApp application(&mphysicalSystem, L"A simple project template", core::dimension2d<u32>(1280,920),
                          false);  // screen dimensions
 
     // Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
 	
     application.AddTypicalLights();
-    application.AddTypicalCamera(core::vector3df(10, 6, -15),
+    application.AddTypicalCamera(core::vector3df(4, 2, -5),
                                  core::vector3df(0, 1, 0));  // to change the position of camera
     // application.AddLightWithShadow(vector3df(1,25,-5), vector3df(0,0,0), 35, 0.2,35, 55, 512, video::SColorf(1,1,1));
 
@@ -62,150 +67,127 @@ int main(int argc, char* argv[]) {
     // 1-Create a floor that is fixed (that is used also to represent the absolute reference)
 	
 	// Create a material that will be used for the floor
-	auto mmaterial = std::make_shared<ChMaterialSurfaceNSC>();
+	//auto mmaterial = std::make_shared<ChMaterialSurfaceNSC>();
 	//mmaterial->SetFriction(0.4f);
 	//mmaterial->SetCompliance(0.0000005f);
 	//mmaterial->SetComplianceT(0.0000005f);
 	//mmaterial->SetDampingF(0.2f);
 
-    auto floorBody = std::make_shared<ChBodyEasyBox>(30, 2, 30,  // x, y, z dimensions
+    auto floorBody = std::make_shared<ChBodyEasyBox>(100, 2, 100,  // x, y, z dimensions
                                                      1000,       // density
                                                      true,      // contact geometry - allow collision
                                                      true        // enable visualization geometry
                                                      );
-    floorBody->SetPos(ChVector<>(0, -2, 0));
-	floorBody->SetMaterialSurface(mmaterial);
+    floorBody->SetPos(ChVector<>(0, -1, 0));
+	//floorBody->SetMaterialSurface(mmaterial);
     floorBody->SetBodyFixed(true);
 
     mphysicalSystem.Add(floorBody);
-	
-	
-	/* comment out pendulum for possible future use
-    // 2-Create a pendulum
-
-    auto pendulumBody = std::make_shared<ChBodyEasyBox>(0.5, 2, 0.5,  // x, y, z dimensions
-                                                        3000,         // density
-                                                        false,        // no contact geometry
-                                                        true          // enable visualization geometry
-                                                        );
-    pendulumBody->SetPos(ChVector<>(0, 3, 0));
-    pendulumBody->SetPos_dt(ChVector<>(1, 0, 0));
-
-    mphysicalSystem.Add(pendulumBody);
-
-    // 3-Create a spherical constraint.
-    //   Here we'll use a ChLinkMateGeneric, but we could also use ChLinkLockSpherical
-
-    auto sphericalLink =
-        std::make_shared<ChLinkMateGeneric>(true, true, true, false, false, false);  // x,y,z,Rx,Ry,Rz constrains
-    ChFrame<> link_position_abs(ChVector<>(0, 4, 0));
-
-    sphericalLink->Initialize(pendulumBody,        // the 1st body to connect
-                              floorBody,           // the 2nd body to connect
-                              false,               // the two following frames are in absolute, not relative, coords.
-                              link_position_abs,   // the link reference attached to 1st body
-                              link_position_abs);  // the link reference attached to 2nd body
-
-    mphysicalSystem.Add(sphericalLink);
-
-    // Optionally, attach a RGB color asset to the floor, for better visualization
-    auto color = std::make_shared<ChColorAsset>();
-    color->SetColor(ChColor(0.2f, 0.25f, 0.25f));
-    floorBody->AddAsset(color);
-
-    // Optionally, attach a texture to the pendulum, for better visualization
-    auto texture = std::make_shared<ChTexture>();
-    texture->SetTextureFilename(GetChronoDataFile("rock.jpg"));  // texture in ../data
-    pendulumBody->AddAsset(texture);
-	*/
-
-	/*attempt to make wheels (template from demo_IRR_aux_ref)
-	// Physical Rover body
-	auto rover = std::make_shared<ChBody>();
-	mphysicalSystem.AddBody(rover);
-	rover->SetIdentifier(1);
-	rover->SetBodyFixed(false);
-	rover->SetCollide(false);
-	rover->SetMass(1);
+	// Optionally, attach a RGB color asset to the floor, for better visualization
+	auto color = std::make_shared<ChColorAsset>();
+	color->SetColor(ChColor(0.2f, 0.25f, 0.25f));
+	floorBody->AddAsset(color);
 
 	// Add Frame
-	auto frameBox = std::make_shared<ChBodyEasyBox>(10, 2, 15,	// x,y,z size
-		100,													// density
-		true,													// collide enable?
-		true													// visualization?		
-		);
-
-	rover->AddAsset(frameBox);
-
-	// Attach a visualization asset. Note that the cylinder is defined with
-	// respect to the centroidal reference frame (which is the body reference
-	// frame for a ChBody).
-	auto wheel_1 = std::make_shared<ChCylinderShape>();
-	wheel_1->GetCylinderGeometry().p1 = ChVector<>(-2, 0, 0);
-	wheel_1->GetCylinderGeometry().p2 = ChVector<>(5, 0, 0);
-	wheel_1->GetCylinderGeometry().rad = 3;
-	rover->AddAsset(wheel_1);
-	//auto col_1 = std::make_shared<ChColorAsset>();
-	//col_1->SetColor(ChColor(0.6f, 0, 0));
-	//rover->AddAsset(col_1);
-	
-	rover->SetPos(ChVector<>(0, 3, 0));
-	mphysicalSystem.Add(rover);
-	*/
-
-	// Add Frame
-	auto frameBox = std::make_shared<ChBodyEasyBox>(10, 2, 15,	// x,y,z size
+	auto frameBox = std::make_shared<ChBodyEasyBox>(.5, .08, .4,	// x,y,z size
 		100,													// density
 		true,													// collide enable?
 		true													// visualization?		
 		);													
-	
+	frameBox->SetMass(10.0);
 	frameBox->SetPos(ChVector<>(0, 3, 0));
 	
 	mphysicalSystem.Add(frameBox);
+	
 
 	// Add wheels
-	/* attempt to use cylinders
+	// attempt to use cylinders
 	auto wheel_1 = std::make_shared<ChBodyEasyCylinder>(
-		3, // radius
-		2, // height
+		.1, // radius
+		.08, // height
 		100,// density
 		true,// collide
 		true// visualization		
 		);
-	*/
-	auto wheel_1 = std::make_shared<ChBodyEasyBox>(2, 6, 6,	// x,y,z size
-		100,													// density
-		true,													// collide enable?
-		true													// visualization?		
-		);
-	wheel_1->SetPos(ChVector<>(6, 3, 6));
-	mphysicalSystem.Add(wheel_1);
 	
-	auto wheel_2 = std::make_shared<ChBodyEasyBox>(2, 6, 6,	// x,y,z size
-		100,													// density
-		true,													// collide enable?
-		true													// visualization?		
+	wheel_1->SetPos(ChVector<>(.25, 3, .25));
+	wheel_1->SetRot(Q_from_AngX(CH_C_PI / 2.0));
+	mphysicalSystem.Add(wheel_1);
+
+	auto texture = std::make_shared<ChTexture>();
+	texture->SetTextureFilename(GetChronoDataFile("redwhite.png"));  // texture in ../data
+	wheel_1->AddAsset(texture);
+
+	//create a revolute joint for wheel 1 and chassis
+	auto wheel1joint = std::make_shared<ChLinkLockRevolute>();
+	wheel1joint->Initialize(frameBox, wheel_1, ChCoordsys<>(ChVector<>(.25,3,.25),Q_from_AngY(0)));
+	mphysicalSystem.Add(wheel1joint);
+
+
+	// attempt to use cylinders
+	auto wheel_2 = std::make_shared<ChBodyEasyCylinder>(
+		.1, // radius
+		.08, // height
+		100,// density
+		true,// collide
+		true// visualization		
 		);
-	wheel_2->SetPos(ChVector<>(-6, 3, 6));
+
+	wheel_2->SetPos(ChVector<>(.25, 3, -.25));
+	wheel_2->SetRot(Q_from_AngX(CH_C_PI / 2.0));
 	mphysicalSystem.Add(wheel_2);
 
-	auto wheel_3 = std::make_shared<ChBodyEasyBox>(2, 6, 6,	// x,y,z size
-		100,													// density
-		true,													// collide enable?
-		true													// visualization?		
+	wheel_2->AddAsset(texture);
+
+	//create a revolute joint for wheel 1 and chassis
+	auto wheel2joint = std::make_shared<ChLinkLockRevolute>();
+	wheel2joint->Initialize(frameBox, wheel_2, ChCoordsys<>(wheel_2->GetPos(), Q_from_AngY(0)));
+	mphysicalSystem.Add(wheel2joint);
+
+
+	// attempt to use cylinders
+	auto wheel_3 = std::make_shared<ChBodyEasyCylinder>(
+		.1, // radius
+		.08, // height
+		100,// density
+		true,// collide
+		true// visualization		
 		);
-	wheel_3->SetPos(ChVector<>(6, 3, -6));
+
+	wheel_3->SetPos(ChVector<>(-.25, 3, .25));
+	wheel_3->SetRot(Q_from_AngX(CH_C_PI / 2.0));
 	mphysicalSystem.Add(wheel_3);
 
-	auto wheel_4 = std::make_shared<ChBodyEasyBox>(2, 6, 6,	// x,y,z size
-		100,													// density
-		true,													// collide enable?
-		true													// visualization?		
-		);
-	wheel_4->SetPos(ChVector<>(-6, 3, -6));
+	wheel_3->AddAsset(texture);
 
+	//create a revolute joint for wheel 1 and chassis
+	auto wheel3joint = std::make_shared<ChLinkLockRevolute>();
+	wheel3joint->Initialize(frameBox, wheel_3, ChCoordsys<>(wheel_3->GetPos(), Q_from_AngY(0)));
+	mphysicalSystem.Add(wheel3joint);
+
+
+	// attempt to use cylinders
+	auto wheel_4 = std::make_shared<ChBodyEasyCylinder>(
+		.1, // radius
+		.08, // height
+		100,// density
+		true,// collide
+		true// visualization		
+		);
+
+	wheel_4->SetPos(ChVector<>(-.25, 3, -.25));
+	wheel_4->SetRot(Q_from_AngX(CH_C_PI / 2.0));
 	mphysicalSystem.Add(wheel_4);
+
+	wheel_4->AddAsset(texture);
+
+	//create a revolute joint for wheel 1 and chassis
+	auto wheel4joint = std::make_shared<ChLinkLockRevolute>();
+	wheel4joint->Initialize(frameBox, wheel_4, ChCoordsys<>(wheel_4->GetPos(), Q_from_AngY(0)));
+	mphysicalSystem.Add(wheel4joint);
+
+	
+	
 
 
     //======================================================================
@@ -218,8 +200,10 @@ int main(int argc, char* argv[]) {
     application.AssetUpdateAll();
 
     // Adjust some settings:
-    application.SetTimestep(0.005);
+	double step_size = 0.001;
+    application.SetTimestep(0.001);
     application.SetTryRealtime(false);
+	mphysicalSystem.SetMaxItersSolverSpeed(1000);
 
     //
     // THE SOFT-REAL-TIME CYCLE
@@ -231,8 +215,9 @@ int main(int argc, char* argv[]) {
         application.DrawAll();
 
         // This performs the integration timestep!
-        application.DoStep();
-		std::cout << "Step number" << i << std::endl;
+        //application.DoStep();
+		mphysicalSystem.DoStepDynamics(step_size);
+		std::cout << "Step number: " << i << std::endl;
 
 		i++;
         application.EndScene();
