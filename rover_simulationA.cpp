@@ -16,12 +16,13 @@
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChLinkMate.h"
+#include "chrono/assets/ChPointPointDrawing.h"
 #include "chrono/assets/ChTexture.h"
 #include "chrono/assets/ChColorAsset.h"
 #include "chrono_irrlicht/ChIrrApp.h"
 
 
-double inTom = 1. / 39.3701;
+double inTom = 1. / 39.3701;	// converting inches to meters
 
 // Use the namespace of Chrono
 
@@ -54,8 +55,8 @@ int main(int argc, char* argv[]) {
     // Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
 	
     application.AddTypicalLights();
-    application.AddTypicalCamera(core::vector3df(3, 2, 4),
-                                 core::vector3df(0, 1, 0));  // to change the position of camera
+    application.AddTypicalCamera(core::vector3df(4, 2, 5),	// position of camera
+                                 core::vector3df(0, 1, 0));  // where camera is looking
     // application.AddLightWithShadow(vector3df(1,25,-5), vector3df(0,0,0), 35, 0.2,35, 55, 512, video::SColorf(1,1,1));
 
     //======================================================================
@@ -73,20 +74,25 @@ int main(int argc, char* argv[]) {
 	auto wheelTexture = std::make_shared<ChTexture>();
 	wheelTexture->SetTextureFilename(GetChronoDataFile("redwhite.png"));  // texture in ../data
 
-    auto floorBody = std::make_shared<ChBodyEasyBox>(20, 1, 20,  // x, y, z dimensions
+    auto floorBody = std::make_shared<ChBodyEasyBox>(100, 1, 100,  // x, y, z dimensions
                                                      1000,       // density
                                                      true,      // contact geometry - allow collision
                                                      true        // enable visualization geometry
                                                      );
-    floorBody->SetPos(ChVector<>(0, -1, 0));
+    floorBody->SetPos(ChVector<>(0, -.5, 0));
 	//floorBody->SetMaterialSurface(mmaterial);
     floorBody->SetBodyFixed(true);
 	mphysicalSystem.Add(floorBody);
 	
 	// Optionally, attach a RGB color asset to the floor, for better visualization
-	auto color = std::make_shared<ChColorAsset>();
+	/*auto color = std::make_shared<ChColorAsset>();
 	color->SetColor(ChColor(0.2f, 0.25f, 0.25f));
 	floorBody->AddAsset(color);
+	*/
+	auto floorTexture = std::make_shared<ChTexture>();
+	floorTexture->SetTextureFilename(GetChronoDataFile("rock.jpg"));  // texture in ../data
+	floorBody->AddAsset(floorTexture);
+
 	
 	
 	// ===============================
@@ -413,7 +419,162 @@ int main(int argc, char* argv[]) {
 
 	
 	// ===============================
-	/* combined into entire side?
+	double springCoefOutside = 700;
+	double springCoefInside = 3000;
+	double damping_coef = 80;
+	double restLengthOutside = 11 * inTom;	//11.345 is original length
+	double restLengthInside = 26 * inTom;	//21.356 is original length
+	
+	auto col_1 = std::make_shared<ChColorAsset>();
+	col_1->SetColor(ChColor(0.6f, 0, 0));
+	
+	// Create right side springs
+	// Create a spring between elements 1 and 5 on the right side
+	auto springRight1 = std::make_shared<ChLinkSpring>();
+	springRight1->Initialize(frameSideRight_1,	// first body to link it with
+		frameSideRight_5,	// second body to link it with
+		false,	// pos absolute
+		ChVector<>(19.757*inTom, 20.625*inTom, (36. / 2. + .5)*inTom), // position of first end of spring
+		ChVector<>(23.272*inTom, 11.865*inTom, (36. / 2. + .5)*inTom), // position of second end of spring
+		false,	// rest length not original length
+		restLengthOutside);	// rest length
+	mphysicalSystem.Add(springRight1);
+	springRight1->Set_SpringK(springCoefOutside);
+	springRight1->Set_SpringR(damping_coef);
+	// Attach a visualization asset.
+	springRight1->AddAsset(col_1);
+	springRight1->AddAsset(std::make_shared<ChPointPointSpring>(.75*inTom, 20, 5));
+
+	// Create a spring between elements 2 and 6 on the right side
+	auto springRight2 = std::make_shared<ChLinkSpring>();
+	springRight2->Initialize(frameSideRight_2,	// first body to link it with
+		frameSideRight_6,	// second body to link it with
+		false,	// pos absolute
+		ChVector<>(-19.757*inTom, 20.625*inTom, (36. / 2. + .5)*inTom), // position of first end of spring
+		ChVector<>(-23.272*inTom, 11.865*inTom, (36. / 2. + .5)*inTom), // position of second end of spring
+		false,	// rest length not original length
+		restLengthOutside);	// rest length
+	mphysicalSystem.Add(springRight2);
+	springRight2->Set_SpringK(springCoefOutside);
+	springRight2->Set_SpringR(damping_coef);
+	// Attach a visualization asset.
+	springRight2->AddAsset(col_1);
+	springRight2->AddAsset(std::make_shared<ChPointPointSpring>(.75*inTom, 20, 5));
+
+	// Create a spring between frame and element 3 on the right side
+	auto springRight3 = std::make_shared<ChLinkSpring>();
+	springRight3->Initialize(frameBox,	// first body to link it with
+		frameSideRight_3,	// second body to link it with
+		false,	// pos absolute
+		ChVector<>(-8.*inTom, 30.*inTom, (36. / 2. + .5)*inTom), // position of first end of spring
+		ChVector<>(8.*inTom, 11.972*inTom, (36. / 2. + .5)*inTom), // position of second end of spring
+		false,	// rest length not original length
+		restLengthInside);	// rest length
+	mphysicalSystem.Add(springRight3);
+	springRight3->Set_SpringK(springCoefInside);
+	springRight3->Set_SpringR(damping_coef);
+	// Attach a visualization asset.
+	springRight3->AddAsset(col_1);
+	springRight3->AddAsset(std::make_shared<ChPointPointSpring>(.75*inTom, 40, 15));
+	
+	// Create a spring between frame and element 4 on the right side
+	auto springRight4 = std::make_shared<ChLinkSpring>();
+	springRight4->Initialize(frameBox,	// first body to link it with
+		frameSideRight_4,	// second body to link it with
+		false,	// pos absolute
+		ChVector<>(8.*inTom, 30.*inTom, (36. / 2. + .5)*inTom), // position of first end of spring
+		ChVector<>(-8.*inTom, 11.972*inTom, (36. / 2. + .5)*inTom), // position of second end of spring
+		false,	// rest length not original length
+		restLengthInside);	// rest length
+	mphysicalSystem.Add(springRight4);
+	springRight4->Set_SpringK(springCoefInside);
+	springRight4->Set_SpringR(damping_coef);
+	// Attach a visualization asset.
+	springRight4->AddAsset(col_1);
+	springRight4->AddAsset(std::make_shared<ChPointPointSpring>(.75*inTom, 40, 15));
+
+
+	// Create left side springs
+	// Create a spring between elements 1 and 5 on the left side
+	auto springLeft1 = std::make_shared<ChLinkSpring>();
+	springLeft1->Initialize(frameSideLeft_1,	// first body to link it with
+		frameSideLeft_5,	// second body to link it with
+		false,	// pos absolute
+		ChVector<>(19.757*inTom, 20.625*inTom, -(36. / 2. + .5)*inTom), // position of first end of spring
+		ChVector<>(23.272*inTom, 11.865*inTom, -(36. / 2. + .5)*inTom), // position of second end of spring
+		false,	// rest length not original length
+		restLengthOutside);	// rest length
+	mphysicalSystem.Add(springLeft1);
+	springLeft1->Set_SpringK(springCoefOutside);
+	springLeft1->Set_SpringR(damping_coef);
+	// Attach a visualization asset.
+	springLeft1->AddAsset(col_1);
+	springLeft1->AddAsset(std::make_shared<ChPointPointSpring>(.75*inTom, 20, 5));
+
+	// Create a spring between elements 2 and 6 on the left side
+	auto springLeft2 = std::make_shared<ChLinkSpring>();
+	springLeft2->Initialize(frameSideLeft_2,	// first body to link it with
+		frameSideLeft_6,	// second body to link it with
+		false,	// pos absolute
+		ChVector<>(-19.757*inTom, 20.625*inTom, -(36. / 2. + .5)*inTom), // position of first end of spring
+		ChVector<>(-23.272*inTom, 11.865*inTom, -(36. / 2. + .5)*inTom), // position of second end of spring
+		false,	// rest length not original length
+		restLengthOutside);	// rest length
+	mphysicalSystem.Add(springLeft2);
+	springLeft2->Set_SpringK(springCoefOutside);
+	springLeft2->Set_SpringR(damping_coef);
+	// Attach a visualization asset.
+	springLeft2->AddAsset(col_1);
+	springLeft2->AddAsset(std::make_shared<ChPointPointSpring>(.75*inTom, 20, 5));
+
+	// Create a spring between frame and element 3 on the left side
+	auto springLeft3 = std::make_shared<ChLinkSpring>();
+	springLeft3->Initialize(frameBox,	// first body to link it with
+		frameSideLeft_3,	// second body to link it with
+		false,	// pos absolute
+		ChVector<>(-8.*inTom, 30.*inTom, -(36. / 2. + .5)*inTom), // position of first end of spring
+		ChVector<>(8.*inTom, 11.972*inTom, -(36. / 2. + .5)*inTom), // position of second end of spring
+		false,	// rest length not original length
+		restLengthInside);	// rest length
+	mphysicalSystem.Add(springLeft3);
+	springLeft3->Set_SpringK(springCoefInside);
+	springLeft3->Set_SpringR(damping_coef);
+	// Attach a visualization asset.
+	springLeft3->AddAsset(col_1);
+	springLeft3->AddAsset(std::make_shared<ChPointPointSpring>(.75*inTom, 40, 15));
+
+	// Create a spring between frame and element 4 on the left side
+	auto springLeft4 = std::make_shared<ChLinkSpring>();
+	springLeft4->Initialize(frameBox,	// first body to link it with
+		frameSideLeft_4,	// second body to link it with
+		false,	// pos absolute
+		ChVector<>(8.*inTom, 30.*inTom, -(36. / 2. + .5)*inTom), // position of first end of spring
+		ChVector<>(-8.*inTom, 11.972*inTom, -(36. / 2. + .5)*inTom), // position of second end of spring
+		false,	// rest length not original length
+		restLengthInside);	// rest length
+	mphysicalSystem.Add(springLeft4);
+	springLeft4->Set_SpringK(springCoefInside);
+	springLeft4->Set_SpringR(damping_coef);
+	// Attach a visualization asset.
+	springLeft4->AddAsset(col_1);
+	springLeft4->AddAsset(std::make_shared<ChPointPointSpring>(.75*inTom, 40, 15));
+
+
+	// ===============================
+	// Add motors to wheels
+	double torqueRightSide = 1.;
+	double torqueLeftSide = 1.;
+	wheelRightJoint_1->Set_Scr_torque(torqueRightSide);
+	wheelRightJoint_2->Set_Scr_torque(torqueRightSide);
+	wheelRightJoint_2_2->Set_Scr_torque(torqueRightSide);
+	wheelRightJoint_3->Set_Scr_torque(torqueRightSide);
+	wheelLeftJoint_1->Set_Scr_torque(torqueLeftSide);
+	wheelLeftJoint_2->Set_Scr_torque(torqueLeftSide);	
+	wheelLeftJoint_2_2->Set_Scr_torque(torqueLeftSide);
+	wheelLeftJoint_3->Set_Scr_torque(torqueLeftSide);
+
+	// ===============================
+		/* combined into entire side?
 	auto frameSideRight_1 = std::make_shared<ChBody>();
 	mphysicalSystem.AddBody(frameSideRight_1);
 	frameSideRight_1->SetIdentifier(1);
@@ -424,7 +585,21 @@ int main(int argc, char* argv[]) {
 	auto frameSideRightComp_1 = std::make_shared<ChBodyEasyBox>();
 	*/
 	
-	
+	// ===============================
+	// Add obstacles
+	auto obstacleBox1 = std::make_shared<ChBodyEasyBox>(8.*inTom, 4.*inTom, 48.*inTom, 100, true, true);
+	obstacleBox1->SetMass(10.0);
+	obstacleBox1->SetPos(ChVector<>(60.*inTom, 2.*inTom, 0));
+	mphysicalSystem.Add(obstacleBox1);
+	obstacleBox1->SetBodyFixed(true);
+	//auto obstacleColor = std::make_shared<ChColorAsset>();
+	//obstacleColor->SetColor(ChColor(0.2f, 0.1f, 0.1f));
+	auto obstacleTexture = std::make_shared<ChTexture>();
+	obstacleTexture->SetTextureFilename(GetChronoDataFile("cubetexture_wood.png"));  // texture in ../data
+	obstacleBox1->AddAsset(obstacleTexture);
+
+
+
     //======================================================================
 	// Use this function for adding a ChIrrNodeAsset to all items
     // Otherwise use application.AssetBind(myitem); on a per-item basis.
